@@ -2,8 +2,9 @@ package builder
 
 import (
 	"fmt"
-	"io/ioutil"
+	"log"
 	"os"
+	"path/filepath"
 
 	Minify "github.com/tdewolff/minify/v2"
 	MinifyCSS "github.com/tdewolff/minify/v2/css"
@@ -11,14 +12,16 @@ import (
 	MinifySVG "github.com/tdewolff/minify/v2/svg"
 )
 
-func TaskForTemplates() {
-	os.RemoveAll("pkg/templates/html")
-	_PrepareDirectory("pkg/templates/html")
-	_CopyDirectory("embed/templates", "pkg/templates/html")
+func TaskForTemplates(src string, dest string) {
+	if err := os.RemoveAll(dest); err != nil {
+		log.Fatal(err)
+	}
+	_PrepareDirectory(dest)
+	if err := _CopyDirectoryWithoutSymlink(src, dest); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println("复制模版文件 ... [OK]")
-
-	minifyFilesByPathAndType("pkg/templates/html", "*.html", "text/html")
-	os.RemoveAll("tmp")
+	minifyFilesByPathAndType(dest, "*.html", "text/html")
 }
 
 func minifyFilesByPathAndType(filePath string, fileFilter string, mimeType string) {
@@ -35,7 +38,7 @@ func minifyFilesByPathAndType(filePath string, fileFilter string, mimeType strin
 	files, _ := _WalkMatch(filePath, fileFilter)
 
 	for _, file := range files {
-		fileRaw, err := ioutil.ReadFile(file)
+		fileRaw, err := os.ReadFile(filepath.Clean(file))
 		if err != nil {
 			fmt.Println("读取文件出错", file)
 		} else {

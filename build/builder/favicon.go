@@ -1,8 +1,13 @@
 package builder
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
-func TaskForFavicon() {
-	_Copy("embed/assets/favicon.ico", "pkg/assets/favicon.ico")
+func TaskForFavicon(src string, dest string) {
+	if err := _Copy(src, dest); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println("复制静态资源 ... [OK]")
 }

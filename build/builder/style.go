@@ -5,13 +5,13 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
 
-func TaskForStyles() {
+func TaskForStyles(gofile string) {
 
 	content := doMinifyCSS([]string{
 		"embed/assets/css/base.css",
@@ -27,19 +27,19 @@ func TaskForStyles() {
 		"embed/assets/css/settings/theme.css",
 	})
 
-	initInlineStyle("/** 月出惊山鸟，时鸣春涧中。**/ "+content, "state/style.go")
+	initInlineStyle("/** 月出惊山鸟，时鸣春涧中。**/ "+content, gofile)
 
 	fmt.Println("打包样式文件 ... [OK]")
 
 }
 
 func initInlineStyle(data string, gofile string) {
-	content := "package state\nconst PAGE_INLINE_STYLE = " + `"` + strings.Replace(data, "\"", "\\\"", -1) + `"`
+	content := "package FlareDefine\nconst PAGE_INLINE_STYLE = " + `"` + strings.Replace(data, "\"", "\\\"", -1) + `"`
 	fmtContent, err := format.Source([]byte(content))
 	if err != nil {
 		fmt.Println("序列化内容失败", err)
 	}
-	err = ioutil.WriteFile(gofile, fmtContent, os.ModePerm)
+	err = os.WriteFile(gofile, fmtContent, os.ModePerm)
 	if err != nil {
 		fmt.Println("保存文件出错", err)
 	}
@@ -80,7 +80,7 @@ func concatenateCSS(cssPathes []string) []byte {
 	var cssAll []byte
 	for _, cssPath := range cssPathes {
 		println("concatenating " + cssPath + " ...")
-		b, err := ioutil.ReadFile(cssPath)
+		b, err := os.ReadFile(filepath.Clean(cssPath))
 		if err != nil {
 			panic(err)
 		}
